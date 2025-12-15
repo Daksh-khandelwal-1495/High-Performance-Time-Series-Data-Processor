@@ -1,0 +1,98 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ build-essential
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build . -j4
+    
+    - name: Test executable
+      run: |
+        cd build
+        ./bin/tsproc --help
+    
+    - name: Run with sample data
+      run: |
+        cd build
+        ./bin/tsproc --input ../data/sample.csv --output output.csv --sma 5 --sma 10
+        ls -lh output.csv
+  
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        brew install cmake
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build . -j4
+    
+    - name: Test executable
+      run: |
+        cd build
+        ./bin/tsproc --help
+    
+    - name: Run with sample data
+      run: |
+        cd build
+        ./bin/tsproc --input ../data/sample.csv --output output.csv --sma 5 --sma 10
+  
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release -j4
+    
+    - name: Test executable
+      run: |
+        cd build
+        if (Test-Path "bin/Release/tsproc.exe") { bin/Release/tsproc.exe --help } else { bin/tsproc.exe --help }
+      shell: pwsh
